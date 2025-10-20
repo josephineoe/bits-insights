@@ -1,2 +1,2 @@
-# bit-insights
+# bits-insights
 Leetcode dream team.
