@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ paper.title if paper else "Paper not found" }} – Scholarly Insight</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        nav {
+            padding: 18px 40px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        nav a:hover {
+            opacity: 1;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 60px auto 40px auto;
+            padding: 0 20px;
+        }
+
+        .title {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .meta {
+            font-size: 13px;
+            color: #bbb;
+            margin-bottom: 16px;
+        }
+
+        .summary {
+            font-size: 15px;
+            color: #ddd;
+            line-height: 1.7;
+            white-space: pre-wrap;
+            margin-bottom: 20px;
+        }
+
+        .links a {
+            color: #fff;
+            text-decoration: none;
+            margin-right: 16px;
+            font-size: 14px;
+            opacity: 0.85;
+        }
+        .links a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        .back-link {
+            font-size: 13px;
+            margin-bottom: 20px;
+        }
+        .back-link a {
+            color: #fff;
+            text-decoration: none;
+            opacity: 0.8;
+        }
+        .back-link a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        /* Reserved placeholder for a favorite/save button — can be connected to a database later */
+        .actions {
+            margin-top: 20px;
+            font-size: 14px;
+            color: #aaa;
+        }
+        .fake-button {
+            display: inline-block;
+            padding: 6px 12px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            cursor: default;
+            font-size: 13px;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div><strong>Scholarly Insight</strong></div>
+    <div>
+        <a href="/">Home</a>
+        <a href="#">Browse</a>
+        <a href="#">Forum</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="back-link">
+        <a href="javascript:history.back();">← Back</a>
+    </div>
+
+    {% if not paper %}
+        <p>Paper with id <code>{{ arxiv_id }}</code> not found.</p>
+    {% else %}
+        <div class="title">{{ paper.title }}</div>
+
+        <div class="meta">
+            {% if paper.authors %}
+                {{ paper.authors | join(", ") }}
+            {% else %}
+                Unknown author
+            {% endif %}
+            {% if paper.published %}
+                · {{ paper.published }}
+            {% endif %}
+            {% if paper.primary_category %}
+                · {{ paper.primary_category }}
+            {% endif %}
+            · arXiv:{{ paper.arxiv_id }}
+        </div>
+
+        <div class="summary">
+            {{ paper.summary }}
+        </div>
+
+        <div class="links">
+            {% if paper.html_link %}
+                <a href="{{ paper.html_link }}" target="_blank">View on arXiv</a>
+            {% endif %}
+            {% if paper.pdf_link %}
+                <a href="{{ paper.pdf_link }}" target="_blank">PDF</a>
+            {% endif %}
+        </div>
+
+        <div class="actions">
+            <!-- Static UI for now — favorites, reading history, and discussion will be added later -->
+            <span class="fake-button">★ Save / Favorite (coming soon)</span>
+            <span class="fake-button">🕒 Add to Reading History (auto later)</span>
+        </div>
+    {% endif %}
+</div>
+
+<footer style="padding:40px; text-align:center; font-size:13px; color:#666; border-top:1px solid #222; margin-top:40px;">
+    © 2025 Scholarly Insight · Details powered by arXiv API
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bits & Insights</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            background-color: #000;     
+            color: #fff;             
+            margin: 0;
+            font-family: "Inter", sans-serif;
+        }
+
+        nav {
+            padding: 18px 40px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+            opacity: 0.85;
+        }
+        nav a:hover {
+            opacity: 1;
+        }
+
+        .hero {
+            max-width: 900px;
+            margin: 120px auto 60px auto;
+            padding: 0 20px;
+        }
+        .hero-title {
+            font-size: 40px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.3;
+        }
+        .hero-subtitle {
+            font-size: 16px;
+            color: #ccc;
+            max-width: 600px;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .search-box {
+            margin-top: 30px;
+            max-width: 700px;
+        }
+        input, select {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 14px;
+            background: #000;
+            border: 1px solid #555;
+            color: #fff;
+            font-size: 15px;
+            border-radius: 4px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #fff;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #fff;
+            color: #000;
+            font-weight: 600;
+            font-size: 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #ccc;
+        }
+
+        /* footer */
+        footer {
+            padding: 40px;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            border-top: 1px solid #222;
+            margin-top: 80px;
+        }
+    </style>
+</head>
+
+<body>
+
+<nav>
+    <div class="left">
+        <strong>Bits & Insights</strong>
+    </div>
+
+    <div class="right">
+        <a href="#">Browse</a>
+        <a href="#">Forum</a>
+        <a href="#">Log In</a>
+        <a href="#">Sign Up</a>
+    </div>
+</nav>
+
+<section class="hero">
+    <div class="hero-title">
+        Search. Read. Explore.<br>
+        Academic Knowledge, Simplified.
+    </div>
+
+    <div class="hero-subtitle">
+        A minimalistic scholarly search tool powered by the arXiv API.
+        Find papers across AI, math, physics, and more — with focus and clarity.
+    </div>
+
+
+    <div class="search-box">
+    <form action="/search" method="GET">
+        <input name="query" type="text" placeholder="Search papers">
+        <input name="author" type="text" placeholder="Author">
+        
+        <select name="category">
+            <option value="">All Categories</option>
+            <option value="cs.AI">cs.AI</option>
+            <option value="cs.LG">cs.LG</option>
+            <option value="math.PR">math.PR</option>
+        </select>
+
+        <button type="submit">Search</button>
+    </form>
+</div>
+</section>
+
+{% if history %}
+<section class="hero" style="margin-top: 20px;">
+    <div class="hero-subtitle" style="margin-bottom: 10px;">
+        Recently viewed
+    </div>
+    <ul style="list-style: none; padding-left: 0; font-size: 14px; color: #ccc;">
+        {% for item in history %}
+        <li style="margin-bottom: 6px;">
+            <a href="{{ url_for('paper_detail', arxiv_id=item.arxiv_id) }}"
+               style="color: #fff; text-decoration: none; opacity: 0.9;">
+                {{ item.title }}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endif %}
+
+
+<footer>
+    © 2025 Bits & Insights · Built with Flask · Powered by arXiv API
+</footer>
+
+</body>
+</html>

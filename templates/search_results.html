@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Results – Bits & Insights</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        nav {
+            padding: 18px 40px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        nav a:hover {
+            opacity: 1;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 60px auto 40px auto;
+            padding: 0 20px;
+        }
+
+        .heading {
+            margin-bottom: 20px;
+        }
+
+        .heading h1 {
+            font-size: 26px;
+            margin-bottom: 8px;
+        }
+
+        .heading p {
+            font-size: 14px;
+            color: #aaa;
+        }
+
+        .paper-list {
+            margin-top: 30px;
+        }
+
+        .paper {
+            border-bottom: 1px solid #222;
+            padding: 18px 0;
+        }
+
+        .paper-title {
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+
+        .paper-title a {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        .paper-title a:hover {
+            text-decoration: underline;
+        }
+
+        .paper-meta {
+            font-size: 13px;
+            color: #bbb;
+            margin-bottom: 8px;
+        }
+
+        .paper-summary {
+            font-size: 14px;
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 6px;
+        }
+
+        .paper-links a {
+            font-size: 13px;
+            color: #fff;
+            text-decoration: none;
+            margin-right: 16px;
+            opacity: 0.85;
+        }
+        .paper-links a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        .back-link {
+            font-size: 13px;
+            margin-top: 10px;
+        }
+        .back-link a {
+            color: #fff;
+            text-decoration: none;
+            opacity: 0.8;
+        }
+        .back-link a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        footer {
+            padding: 40px;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            border-top: 1px solid #222;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div><strong>Bits & Insights</strong></div>
+    <div>
+        <a href="/">Home</a>
+        <a href="#">Browse</a>
+        <a href="#">Forum</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="heading">
+        <h1>Search Results</h1>
+        <p>
+            {% if query %}Query: <strong>{{ query }}</strong>{% endif %}
+            {% if author %} · Author: <strong>{{ author }}</strong>{% endif %}
+            {% if category %} · Category: <strong>{{ category }}</strong>{% endif %}
+        </p>
+        <p>
+            {% if papers %}
+                {{ papers|length }} result(s) found.
+            {% else %}
+                No results found.
+            {% endif %}
+        </p>
+        <div class="back-link">
+            <a href="/">← Back to Home</a>
+        </div>
+    </div>
+
+    <div class="paper-list">
+        {% for p in papers %}
+        <div class="paper">
+            <div class="paper-title">
+                {% if p.arxiv_id %}
+                    <a href="{{ url_for('paper_detail', arxiv_id=p.arxiv_id) }}">
+                        {{ p.title }}
+                    </a>
+                {% elif p.html_link %}
+                    <a href="{{ p.html_link }}" target="_blank" rel="noopener noreferrer">
+                        {{ p.title }}
+                    </a>
+                {% else %}
+                    {{ p.title }}
+                {% endif %}
+            </div>
+
+            <div class="paper-meta">
+                {% if p.authors %}
+                    {{ p.authors | join(", ") }}
+                {% else %}
+                    Unknown author
+                {% endif %}
+                {% if p.published %}
+                    · {{ p.published }}
+                {% endif %}
+            </div>
+
+            <div class="paper-summary">
+                {{ p.summary }}
+            </div>
+
+            <div class="paper-links">
+                {% if p.html_link %}
+                    <a href="{{ p.html_link }}" target="_blank">View on arXiv</a>
+                {% endif %}
+                {% if p.pdf_link %}
+                    <a href="{{ p.pdf_link }}" target="_blank">PDF</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<footer>
+    © 2025 Bits & Insights · Search powered by arXiv API
+</footer>
+
+</body>
+</html>
