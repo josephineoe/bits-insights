@@ -84,7 +84,6 @@
             background: #ccc;
         }
 
-        /* footer */
         footer {
             padding: 40px;
             text-align: center;
@@ -106,8 +105,14 @@
     <div class="right">
         <a href="#">Browse</a>
         <a href="#">Forum</a>
-        <a href="#">Log In</a>
-        <a href="#">Sign Up</a>
+        <a href="/favorites">Favorites</a>
+
+        <!-- Log In link shown before login -->
+        <a href="/login" id="login-link">Log In</a>
+
+        <!-- Email + Logout shown after login -->
+        <span id="user-email" style="font-size:13px; color:#aaa; margin-left:16px; display:none;"></span>
+        <a href="#" id="logout-link" style="margin-left:12px; color:#f77; font-size:13px; display:none;">Logout</a>
     </div>
 </nav>
 
@@ -122,46 +127,152 @@
         Find papers across AI, math, physics, and more — with focus and clarity.
     </div>
 
-
     <div class="search-box">
-    <form action="/search" method="GET">
-        <input name="query" type="text" placeholder="Search papers">
-        <input name="author" type="text" placeholder="Author">
-        
-        <select name="category">
-            <option value="">All Categories</option>
-            <option value="cs.AI">cs.AI</option>
-            <option value="cs.LG">cs.LG</option>
-            <option value="math.PR">math.PR</option>
-        </select>
+        <form action="/search" method="GET">
+            <input name="query" type="text" placeholder="Search papers">
+            <input name="author" type="text" placeholder="Author">
+            
+            <select name="category">
+                <option value="">All Categories</option>
+                <option value="cs.AI">cs.AI</option>
+                <option value="cs.LG">cs.LG</option>
+                <option value="math.PR">math.PR</option>
+            </select>
 
-        <button type="submit">Search</button>
-    </form>
-</div>
+            <button type="submit">Search</button>
+        </form>
+    </div>
 </section>
 
-{% if history %}
-<section class="hero" style="margin-top: 20px;">
+<section class="hero" id="recent-section" style="display:none; margin-top: 20px;">
     <div class="hero-subtitle" style="margin-bottom: 10px;">
         Recently viewed
     </div>
-    <ul style="list-style: none; padding-left: 0; font-size: 14px; color: #ccc;">
-        {% for item in history %}
-        <li style="margin-bottom: 6px;">
-            <a href="{{ url_for('paper_detail', arxiv_id=item.arxiv_id) }}"
-               style="color: #fff; text-decoration: none; opacity: 0.9;">
-                {{ item.title }}
-            </a>
-        </li>
-        {% endfor %}
-    </ul>
+    <ul id="recent-list" style="list-style: none; padding-left: 0; font-size: 14px; color: #ccc;"></ul>
 </section>
-{% endif %}
-
 
 <footer>
     © 2025 Bits & Insights · Built with Flask · Powered by arXiv API
 </footer>
+
+<!-- Firebase: Use the same config as login / detail / favorites -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAi7T7g8zFNYewd-6MSwMbl0qY4H1t7TSI",
+    authDomain: "bits-insights.firebaseapp.com",
+    projectId: "bits-insights",
+    storageBucket: "bits-insights.firebasestorage.app",
+    messagingSenderId: "977263721818",
+    appId: "1:977263721818:web:4b2c5901fbcd9ccc97c763",
+    measurementId: "G-J5QDM8RWM0"
+    };
+
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+  const auth = firebase.auth();
+
+  const loginLink  = document.getElementById("login-link");
+  const userEmail  = document.getElementById("user-email");
+  const logoutLink = document.getElementById("logout-link");
+
+  // Listen to login state changes and control display
+  auth.onAuthStateChanged((user) => {
+      if (user) {
+          // Logged in: hide Log In, show email + Logout
+          if (loginLink)  loginLink.style.display = "none";
+          if (userEmail) {
+              userEmail.style.display = "inline";
+              userEmail.textContent = user.email;
+          }
+          if (logoutLink) logoutLink.style.display = "inline";
+      } else {
+          // Not logged in: show Log In, hide email + Logout
+          if (loginLink)  loginLink.style.display = "inline";
+          if (userEmail) {
+              userEmail.style.display = "none";
+              userEmail.textContent = "";
+          }
+          if (logoutLink) logoutLink.style.display = "none";
+      }
+  });
+
+  // Logout button
+  if (logoutLink) {
+      logoutLink.addEventListener("click", async (e) => {
+          e.preventDefault();
+          try {
+              await auth.signOut();
+              // After logout, return to homepage (actually already on homepage, will refresh state)
+              window.location.href = "/";
+          } catch (err) {
+              console.error("Logout error:", err);
+          }
+      });
+  }
+</script>
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
+  const db = firebase.firestore();
+  const recentSection = document.getElementById("recent-section");
+  const recentList = document.getElementById("recent-list");
+
+  auth.onAuthStateChanged(async (user) => {
+      // Keep your original nav login state control logic
+      // Here additionally handle Recently viewed
+      if (!user) {
+          if (recentSection) recentSection.style.display = "none";
+          if (recentList) recentList.innerHTML = "";
+          return;
+      }
+
+      try {
+          const snapshot = await db
+            .collection("users")
+            .doc(user.uid)
+            .collection("recent")
+            .orderBy("viewedAt", "desc")
+            .limit(10)
+            .get();
+
+          if (snapshot.empty) {
+              recentSection.style.display = "none";
+              recentList.innerHTML = "";
+              return;
+          }
+
+          recentList.innerHTML = "";
+          snapshot.forEach(doc => {
+              const data = doc.data();
+              const li = document.createElement("li");
+              li.style.marginBottom = "6px";
+
+              const link = document.createElement("a");
+              link.href = "/paper/" + (data.arxiv_id || doc.id);
+              link.textContent = data.title || data.arxiv_id || doc.id;
+              link.style.color = "#fff";
+              link.style.textDecoration = "none";
+              link.style.opacity = "0.9";
+
+              link.onmouseover = () => link.style.textDecoration = "underline";
+              link.onmouseout  = () => link.style.textDecoration = "none";
+
+              li.appendChild(link);
+              recentList.appendChild(li);
+          });
+
+          recentSection.style.display = "block";
+      } catch (err) {
+          console.error("Error loading recent views:", err);
+          recentSection.style.display = "none";
+      }
+  });
+</script>
+
 
 </body>
 </html>

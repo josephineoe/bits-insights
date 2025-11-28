@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login – Bits & Insights</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            font-family: "Inter", sans-serif;
+        }
+        nav {
+            padding: 18px 40px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        nav a:hover { opacity: 1; }
+
+        .container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 0 20px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        input {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 12px;
+            background: #000;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #fff;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 4px;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        button:hover { background: #ccc; }
+        .toggle {
+            margin-top: 12px;
+            font-size: 13px;
+            color: #aaa;
+            cursor: pointer;
+        }
+        .message {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #bbb;
+            min-height: 18px;
+        }
+        .user-info {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div><strong>Bits & Insights</strong></div>
+    <div>
+        <a href="/">Home</a>
+        <a href="/login">Login</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h1 id="form-title">Log in</h1>
+
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+
+    <button id="submit-btn">Log in</button>
+
+    <div class="toggle" id="toggle-mode">
+        Don't have an account? <span style="text-decoration: underline;">Sign up</span>
+    </div>
+
+    <div class="message" id="message"></div>
+    <div class="user-info" id="user-info"></div>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<script>
+  // 
+  const firebaseConfig = {
+    apiKey: "AIzaSyAi7T7g8zFNYewd-6MSwMbl0qY4H1t7TSI",
+    authDomain: "bits-insights.firebaseapp.com",
+    projectId: "bits-insights",
+    storageBucket: "bits-insights.firebasestorage.app",
+    messagingSenderId: "977263721818",
+    appId: "1:977263721818:web:4b2c5901fbcd9ccc97c763",
+    measurementId: "G-J5QDM8RWM0"
+    };
+
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+  const submitBtn = document.getElementById("submit-btn");
+  const toggleMode = document.getElementById("toggle-mode");
+  const formTitle = document.getElementById("form-title");
+  const messageEl = document.getElementById("message");
+  const userInfoEl = document.getElementById("user-info");
+
+  let mode = "login"; // "login" or "signup"
+
+  function setMessage(text) {
+    messageEl.textContent = text;
+  }
+
+  function setUserInfo(text) {
+    userInfoEl.textContent = text;
+  }
+
+  submitBtn.addEventListener("click", async function () {
+      const email = emailInput.value.trim();
+      const password = passwordInput.value.trim();
+      setMessage("");
+
+      if (!email || !password) {
+        setMessage("Please enter email and password.");
+        return;
+      }
+
+      try {
+        if (mode === "login") {
+          await auth.signInWithEmailAndPassword(email, password);
+          setMessage("Logged in successfully.");
+
+          // Auto redirect
+          setTimeout(() => {
+              window.location.href = "/";
+          }, 500);
+
+        } else {
+          await auth.createUserWithEmailAndPassword(email, password);
+          setMessage("Account created and logged in.");
+
+          // Auto redirect (also redirect to homepage after signup)
+          setTimeout(() => {
+              window.location.href = "/";
+          }, 500);
+        }
+      } catch (err) {
+        setMessage(err.message);
+      }
+  });
+
+
+  toggleMode.addEventListener("click", function () {
+    if (mode === "login") {
+      mode = "signup";
+      formTitle.textContent = "Sign up";
+      submitBtn.textContent = "Sign up";
+      toggleMode.innerHTML = `Already have an account? <span style="text-decoration: underline;">Log in</span>`;
+      setMessage("");
+    } else {
+      mode = "login";
+      formTitle.textContent = "Log in";
+      submitBtn.textContent = "Log in";
+      toggleMode.innerHTML = `Don't have an account? <span style="text-decoration: underline;">Sign up</span>`;
+      setMessage("");
+    }
+  });
+
+  // Monitor auth state (frontend visible current user)
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      setUserInfo(`Signed in as: ${user.email}`);
+      console.log("Current user:", user.uid, user.email);
+    } else {
+      setUserInfo("");
+      console.log("No user signed in.");
+    }
+  });
+</script>
+
+</body>
+</html>

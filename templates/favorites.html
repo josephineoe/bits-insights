@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Favorites – Bits & Insights</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            font-family: "Inter", sans-serif;
+        }
+        nav {
+            padding: 18px 40px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        nav a:hover { opacity: 1; }
+
+        .container {
+            max-width: 800px;
+            margin: 60px auto 40px auto;
+            padding: 0 20px;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #fav-message {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 10px;
+        }
+
+        ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        li a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 15px;
+            opacity: 0.9;
+        }
+        li a:hover {
+            text-decoration: underline;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div><strong>Bits & Insights</strong></div>
+    <div>
+        <a href="/">Home</a>
+        <a href="/favorites">Favorites</a>
+        <a href="/login">Login</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h1>Favorites</h1>
+
+    <p id="fav-message">Loading...</p>
+    <ul id="fav-list"></ul>
+</div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAi7T7g8zFNYewd-6MSwMbl0qY4H1t7TSI",
+    authDomain: "bits-insights.firebaseapp.com",
+    projectId: "bits-insights",
+    storageBucket: "bits-insights.firebasestorage.app",
+    messagingSenderId: "977263721818",
+    appId: "1:977263721818:web:4b2c5901fbcd9ccc97c763",
+    measurementId: "G-J5QDM8RWM0"
+    };
+
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+
+  const favMessageEl = document.getElementById("fav-message");
+  const favListEl = document.getElementById("fav-list");
+
+  auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+          favMessageEl.textContent = "Please log in to see your favorites.";
+          favListEl.innerHTML = "";
+          return;
+      }
+
+      favMessageEl.textContent = "Loading your favorites...";
+
+      try {
+          const snapshot = await db
+              .collection("users")
+              .doc(user.uid)
+              .collection("favorites")
+              .orderBy("createdAt", "desc")
+              .get();
+
+          if (snapshot.empty) {
+              favMessageEl.textContent = "You have no favorite papers yet.";
+              favListEl.innerHTML = "";
+              return;
+          }
+
+          favMessageEl.textContent = "";
+          favListEl.innerHTML = "";
+
+          snapshot.forEach(doc => {
+              const data = doc.data();
+              const li = document.createElement("li");
+
+              const link = document.createElement("a");
+              const arxivId = data.arxiv_id || doc.id;
+
+              link.href = "/paper/" + arxivId;
+              link.textContent = data.title || arxivId;
+              li.appendChild(link);
+
+              favListEl.appendChild(li);
+          });
+
+      } catch (err) {
+          console.error("Error loading favorites:", err);
+          favMessageEl.textContent = "Error loading favorites.";
+          favListEl.innerHTML = "";
+      }
+  });
+</script>
+
+</body>
+</html>

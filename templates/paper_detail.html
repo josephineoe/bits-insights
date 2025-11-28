@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{{ paper.title if paper else "Paper not found" }} – Scholarly Insight</title>
+    <title>{{ paper.title if paper else "Paper not found" }} – Bits & Insights</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <style>
@@ -82,35 +82,111 @@
             text-decoration: underline;
         }
 
-        /* Reserved placeholder for a favorite/save button — can be connected to a database later */
         .actions {
             margin-top: 20px;
             font-size: 14px;
-            color: #aaa;
         }
-        .fake-button {
-            display: inline-block;
+
+        #fav-btn {
             padding: 6px 12px;
             border: 1px solid #555;
             border-radius: 4px;
-            cursor: default;
+            background: #000;
+            color: #fff;
+            cursor: pointer;
             font-size: 13px;
-            margin-right: 10px;
+        }
+
+        #fav-btn:disabled {
+            opacity: 0.5;
+        }
+
+        /* Discussion / Forum */
+        .discussion {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #222;
+        }
+        .discussion h2 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        .comment-hint {
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 8px;
+        }
+        #comment-input {
+            width: 100%;
+            padding: 10px;
+            background: #000;
+            border: 1px solid #555;
+            color: #fff;
+            border-radius: 4px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 70px;
+            margin-bottom: 8px;
+        }
+        #comment-input:focus {
+            outline: none;
+            border-color: #fff;
+        }
+        #comment-submit {
+            padding: 8px 14px;
+            background: #fff;
+            color: #000;
+            border: none;
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        #comment-submit:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+        #comment-error {
+            font-size: 12px;
+            color: #f77;
+            margin-top: 4px;
+            min-height: 16px;
+        }
+        #comment-list {
+            list-style: none;
+            padding-left: 0;
+            margin-top: 20px;
+        }
+        .comment-item {
+            margin-bottom: 14px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #222;
+        }
+        .comment-meta {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 4px;
+        }
+        .comment-text {
+            font-size: 14px;
+            color: #ddd;
+            white-space: pre-wrap;
         }
     </style>
 </head>
 <body>
 
 <nav>
-    <div><strong>Scholarly Insight</strong></div>
+    <div><strong>Bits & Insights</strong></div>
     <div>
         <a href="/">Home</a>
-        <a href="#">Browse</a>
-        <a href="#">Forum</a>
+        <a href="/favorites">Favorites</a>
+        <a href="/login">Login</a>
     </div>
 </nav>
 
 <div class="container">
+
     <div class="back-link">
         <a href="javascript:history.back();">← Back</a>
     </div>
@@ -118,47 +194,317 @@
     {% if not paper %}
         <p>Paper with id <code>{{ arxiv_id }}</code> not found.</p>
     {% else %}
-        <div class="title">{{ paper.title }}</div>
 
-        <div class="meta">
-            {% if paper.authors %}
-                {{ paper.authors | join(", ") }}
-            {% else %}
-                Unknown author
-            {% endif %}
-            {% if paper.published %}
-                · {{ paper.published }}
-            {% endif %}
-            {% if paper.primary_category %}
-                · {{ paper.primary_category }}
-            {% endif %}
-            · arXiv:{{ paper.arxiv_id }}
+    <div class="title">{{ paper.title }}</div>
+
+    <div class="meta">
+        {% if paper.authors %}
+            {{ paper.authors | join(", ") }}
+        {% else %}
+            Unknown author
+        {% endif %}
+        {% if paper.published %}
+            · {{ paper.published }}
+        {% endif %}
+        {% if paper.primary_category %}
+            · {{ paper.primary_category }}
+        {% endif %}
+        · arXiv:{{ paper.arxiv_id }}
+    </div>
+
+    <div class="summary">
+        {{ paper.summary }}
+    </div>
+
+    <div class="links">
+        {% if paper.html_link %}
+            <a href="{{ paper.html_link }}" target="_blank">View on arXiv</a>
+        {% endif %}
+        {% if paper.pdf_link %}
+            <a href="{{ paper.pdf_link }}" target="_blank">PDF</a>
+        {% endif %}
+    </div>
+
+    <!-- Favorite button -->
+    <div class="actions">
+        <button id="fav-btn">Loading favorite...</button>
+        <div id="fav-hint" style="font-size:12px; color:#888; margin-top:6px; display:none;">
+            Log in to add this paper to your favorites.
+        </div>
+    </div>
+
+    <!-- Discussion area / Forum -->
+    <div class="discussion">
+        <h2>Discussion</h2>
+        <div id="discussion-hint" class="comment-hint">
+            Log in to join the discussion.
         </div>
 
-        <div class="summary">
-            {{ paper.summary }}
-        </div>
+        <textarea id="comment-input" placeholder="Share your thoughts..." disabled></textarea>
+        <button id="comment-submit" disabled>Post</button>
+        <div id="comment-error"></div>
 
-        <div class="links">
-            {% if paper.html_link %}
-                <a href="{{ paper.html_link }}" target="_blank">View on arXiv</a>
-            {% endif %}
-            {% if paper.pdf_link %}
-                <a href="{{ paper.pdf_link }}" target="_blank">PDF</a>
-            {% endif %}
-        </div>
+        <ul id="comment-list"></ul>
+    </div>
 
-        <div class="actions">
-            <!-- Static UI for now — favorites, reading history, and discussion will be added later -->
-            <span class="fake-button">★ Save / Favorite (coming soon)</span>
-            <span class="fake-button">🕒 Add to Reading History (auto later)</span>
-        </div>
     {% endif %}
 </div>
 
 <footer style="padding:40px; text-align:center; font-size:13px; color:#666; border-top:1px solid #222; margin-top:40px;">
-    © 2025 Scholarly Insight · Details powered by arXiv API
+    © 2025 Bits & Insights · Details powered by arXiv API
 </footer>
+
+{% if paper %}
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAi7T7g8zFNYewd-6MSwMbl0qY4H1t7TSI",
+    authDomain: "bits-insights.firebaseapp.com",
+    projectId: "bits-insights",
+    storageBucket: "bits-insights.firebasestorage.app",
+    messagingSenderId: "977263721818",
+    appId: "1:977263721818:web:4b2c5901fbcd9ccc97c763",
+    measurementId: "G-J5QDM8RWM0"
+  };
+
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+
+  const arxivId    = "{{ paper.arxiv_id }}";
+  const paperTitle = {{ paper.title | tojson }};
+
+  // ====== Favorite related ======
+  const favBtn  = document.getElementById("fav-btn");
+  const favHint = document.getElementById("fav-hint");
+
+  let currentUser = null;
+  let isFavorite  = false;
+
+  function updateFavoriteButton() {
+      if (!favBtn) return;
+
+      if (!currentUser) {
+          favBtn.textContent = "Log in to add to favorites";
+          favBtn.disabled = true;
+          favHint.style.display = "block";
+          return;
+      }
+      favHint.style.display = "none";
+      favBtn.disabled = false;
+      favBtn.textContent = isFavorite ? "★ Remove from favorites"
+                                      : "☆ Add to favorites";
+  }
+
+  // ====== Discussion area related ======
+  const commentInput   = document.getElementById("comment-input");
+  const commentSubmit  = document.getElementById("comment-submit");
+  const commentError   = document.getElementById("comment-error");
+  const commentList    = document.getElementById("comment-list");
+  const discussionHint = document.getElementById("discussion-hint");
+
+  function setCommentError(msg) {
+      if (commentError) commentError.textContent = msg || "";
+  }
+
+  async function loadComments() {
+      if (!commentList) return;
+
+      try {
+          const snapshot = await db
+              .collection("papers")
+              .doc(arxivId)
+              .collection("comments")
+              .orderBy("createdAt", "asc")
+              .limit(50)
+              .get();
+
+          commentList.innerHTML = "";
+
+          if (snapshot.empty) {
+              const li = document.createElement("li");
+              li.className = "comment-item";
+              li.innerHTML = `<div class="comment-meta">No comments yet. Be the first to comment.</div>`;
+              commentList.appendChild(li);
+              return;
+          }
+
+          snapshot.forEach(doc => {
+              const data = doc.data();
+              const li = document.createElement("li");
+              li.className = "comment-item";
+
+              const email = data.userEmail || "Unknown user";
+              let timeText = "";
+              if (data.createdAt && data.createdAt.toDate) {
+                  timeText = data.createdAt.toDate().toLocaleString();
+              }
+
+              const safeText = (data.text || "")
+                  .replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;");
+
+              li.innerHTML = `
+                <div class="comment-meta">
+                  ${email} ${timeText ? " · " + timeText : ""}
+                </div>
+                <div class="comment-text">${safeText}</div>
+              `;
+              commentList.appendChild(li);
+          });
+
+      } catch (err) {
+          console.error("Error loading comments:", err);
+          setCommentError("Error loading comments.");
+      }
+  }
+
+  // ====== Monitor auth state ======
+  auth.onAuthStateChanged(async (user) => {
+      currentUser = user || null;
+
+    // Discussion login state control
+      if (!user) {
+          if (discussionHint) discussionHint.textContent = "Log in to join the discussion.";
+          if (commentInput) {
+              commentInput.disabled = true;
+              commentInput.value = "";
+          }
+          if (commentSubmit) commentSubmit.disabled = true;
+      } else {
+          if (discussionHint) discussionHint.textContent = "You are signed in as " + user.email;
+          if (commentInput) commentInput.disabled = false;
+          if (commentSubmit) commentSubmit.disabled = false;
+
+          // Record "recently viewed"
+          try {
+              const recentRef = db
+                .collection("users")
+                .doc(user.uid)
+                .collection("recent")
+                .doc(arxivId);
+
+              await recentRef.set({
+                  arxiv_id: arxivId,
+                  title: paperTitle,
+                  viewedAt: firebase.firestore.FieldValue.serverTimestamp()
+              }, { merge: true });
+          } catch (err) {
+              console.error("Error writing recent view:", err);
+          }
+      }
+
+    // Favorite status
+      if (!user) {
+          isFavorite = false;
+          updateFavoriteButton();
+      } else {
+          const docRef = db.collection("users")
+                           .doc(user.uid)
+                           .collection("favorites")
+                           .doc(arxivId);
+          try {
+              const snap = await docRef.get();
+              isFavorite = snap.exists;
+          } catch (err) {
+              console.error("Error reading favorite:", err);
+              favBtn.textContent = "Error";
+          }
+          updateFavoriteButton();
+      }
+
+    // Load comments regardless of login status
+      loadComments();
+  });
+
+// Favorite button click
+  if (favBtn) {
+      favBtn.addEventListener("click", async () => {
+          if (!currentUser) return;
+
+          favBtn.disabled = true;
+          const docRef = db.collection("users")
+                           .doc(currentUser.uid)
+                           .collection("favorites")
+                           .doc(arxivId);
+
+          try {
+              if (isFavorite) {
+                  await docRef.delete();
+                  isFavorite = false;
+              } else {
+                  await docRef.set({
+                      arxiv_id: arxivId,
+                      title: paperTitle,
+                      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                  });
+                  isFavorite = true;
+              }
+              updateFavoriteButton();
+          } catch (err) {
+              console.error("Error toggling favorite:", err);
+              favBtn.textContent = "Error, try again";
+          } finally {
+              favBtn.disabled = false;
+          }
+      });
+  }
+
+// Submit comment
+  if (commentSubmit) {
+      commentSubmit.addEventListener("click", async () => {
+          setCommentError("");
+
+          if (!currentUser) {
+              setCommentError("Please log in to comment.");
+              return;
+          }
+
+          if (!commentInput) return;
+
+          const text = commentInput.value.trim();
+          if (!text) {
+              setCommentError("Comment cannot be empty.");
+              return;
+          }
+
+          commentSubmit.disabled = true;
+
+          try {
+              await db
+                  .collection("papers")
+                  .doc(arxivId)
+                  .collection("comments")
+                  .add({
+                      text: text,
+                      userId: currentUser.uid,
+                      userEmail: currentUser.email || "",
+                      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                  });
+
+              commentInput.value = "";
+              await loadComments();
+          } catch (err) {
+              console.error("Error posting comment:", err);
+              setCommentError("Error posting comment. Please try again.");
+          } finally {
+              commentSubmit.disabled = false;
+          }
+      });
+  }
+
+// Try loading comments once on initial page load (guests can view as well)
+  loadComments();
+</script>
+{% endif %}
 
 </body>
 </html>
