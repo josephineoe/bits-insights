@@ -1,182 +1,137 @@
 # bits-insights
 Leetcode dream team.
 
-🧠 Bits & Insights — Scholarly Search Platform
+# 🧠 Bits & Insights — Scholarly Search Platform
 
-A minimalistic academic search web application built with Flask, powered by the arXiv API, with Firebase Authentication and Firestore database for user-specific data such as favorites and reading history.
+A minimalistic academic search web application built with **Flask**, powered by the **arXiv API**, and enhanced with **Firebase Authentication** and **Firestore** for user-specific features such as favorites and reading history.
 
-🚀 Features
-🔍 1. Advanced arXiv Search
+---
 
-Keyword search
+## 🚀 Features
 
-Author search
+### 🔍 1. Advanced arXiv Search
+- Keyword search  
+- Author search  
+- Category filter  
+- Combined author + category search  
+- Boolean query support (AND / OR)  
+- Custom relevance ranking using:
+  - Term-frequency scoring  
+  - Extra weight for title matches  
+- Organized search result cards displaying:
+  - Title  
+  - Authors  
+  - Abstract summary  
+  - Publication date  
+  - PDF link  
+  - arXiv link  
 
-Category filter
+---
 
-Combined queries (author + category)
-
-Boolean search (AND/OR)
-
-Custom relevance ranking using:
-
-Term-frequency scoring
-
-Title-weighted relevance boost
-
-Clean search results page with:
-
-Title
-
-Authors
-
-Abstract summary
-
-PDF link
-
-arXiv link
-
-Publication date
-
-📄 2. Paper Detail Page
-
+### 📄 2. Paper Detail Page
 Includes:
+- Full paper metadata  
+- Title, abstract, authors  
+- Primary category  
+- PDF & arXiv page links  
+- ⭐ Add / Remove favorites  
+- 📘 Recently viewed tracking (up to 10 items)  
 
-Title
+---
 
-Abstract
+### 📚 3. Recently Viewed
+- Automatically updated when a paper is viewed  
+- Displayed on homepage  
+- Stored per user (Firestore)  
+- Maintains up to 10 items  
 
-Authors
+---
 
-Publication date
-
-Primary category
-
-PDF link
-
-Link to arXiv page
-
-Also supports:
-
-⭐ Add/Remove Favorites
-
-📘 Recently Viewed (per user)
-
-📚 3. Recently Viewed Papers
-
-Automatically tracks papers the user views
-
-Displays on homepage
-
-Stored per user (Firebase)
-
-Up to 10 items
-
-❤️ 4. Favorites System
-
-Stored in Firebase Firestore under:
-
+### ❤️ 4. Favorites System
+Stored in **Firestore** under:
 users/{uid}/favorites/{arxiv_id}
 
 
 Supports:
+- Add favorite  
+- Remove favorite  
+- Favorites page  
+- Always synced to user’s authentication state  
 
-Add to favorites
+---
 
-Remove from favorites
+### 🔐 5. Authentication
+Using **Firebase Authentication**:
+- Login  
+- Signup  
+- Persistent login session  
+- Auto redirect after login  
+- Navbar shows:
+  - User email  
+  - Logout button  
 
-Favorites page
+---
 
-Persistent across sessions
+### 🚪 6. Logout
+- Firebase signOut  
+- Navbar refresh  
+- Redirect to homepage  
 
-🔐 5. Authentication
+---
 
-Powered by Firebase Authentication:
+### 🎨 7. UI / UX
+- Minimalistic **black & white** theme  
+- Simple and clean layout  
+- Responsive spacing  
+- Easy navigation  
 
-Login
+---
 
-Signup
+## 🧩 Architecture
 
-Persistent session
+### Backend
+- **Flask** (Python web framework)  
+- **search_strategy.py** for advanced arXiv search operations  
+- **Session system** for non-auth users (recently viewed fallback)  
 
-Auto-redirect after login
+### Frontend
+- HTML5 + CSS (no Bootstrap, pure minimal style)  
+- Firebase Web SDK (compat version):
+  - firebase-app-compat  
+  - firebase-auth-compat  
+  - firebase-firestore-compat  
 
-Navbar updates to show:
+### Data
+- arXiv API (via `arxiv` Python library)  
+- Firestore NoSQL Database  
 
-Logged-in email
+### Infrastructure
+- Docker containerization  
+- Docker Compose for development  
 
-Logout button
+---
 
-🚪 6. Logout
+## 📦 Tech Stack
 
-Firebase signOut()
+### Backend
+- Python 3.11  
+- Flask  
+- arxiv Python library  
+- feedparser (legacy)  
+- requests (legacy)
 
-Navbar updates instantly
+### Frontend
+- HTML / CSS  
+- Firebase Web SDK (compat)
 
-Redirect to homepage
+### Database / Auth
+- Firebase Firestore  
+- Firebase Authentication  
 
-🎨 7. UI / UX
+---
 
-Minimalistic black and white design
+## 📁 Project Structure
 
-Clean typography
-
-Intuitive navigation
-
-Responsive layout
-
-🧩 8. Architecture
-
-Backend: Flask
-
-Frontend: HTML + CSS
-
-Database: Firestore
-
-Authentication: Firebase Auth
-
-Data Source: arXiv API (via arxiv Python library)
-
-Containers: Docker
-
-📦 Tech Stack
-Backend
-
-Python 3.11
-
-Flask
-
-arxiv (Python library)
-
-feedparser (legacy)
-
-requests (legacy, minimal use)
-
-Frontend
-
-HTML5
-
-CSS3
-
-Firebase Web SDK (compat)
-
-firebase-app-compat
-
-firebase-auth-compat
-
-firebase-firestore-compat
-
-Infrastructure
-
-Docker
-
-Docker Compose
-
-Firestore NoSQL database
-
-Firebase Authentication
-
-📁 Project Structure Example
 bits-insights/
 │
 ├── app.py
@@ -185,33 +140,20 @@ bits-insights/
 ├── Dockerfile
 │
 ├── templates/
-│   ├── index.html
-│   ├── search_results.html
-│   ├── paper_detail.html
-│   ├── favorites.html
-│   └── login.html
+│ ├── index.html
+│ ├── search_results.html
+│ ├── paper_detail.html
+│ ├── favorites.html
+│ └── login.html
 │
 └── static/
-    └── (optional CSS / images)
+└── (optional assets)
 
-🔧 Installation & Run (Docker)
-1. Clone repo
-git clone <your repo>
+## 🛠 Installation & Run (Docker)
+
+### 1. Clone repository
+```bash
+git clone <your repo url>
 cd bits-insights
 
-2. Build and start
 docker compose up --build
-
-3. Visit the app
-
-http://localhost:5000
-
-🔥 Future Work
-
-Discussion Forum (per-paper or general)
-
-Browse page (filter by field / trending papers)
-
-Notification system (alerts for new papers)
-
-Better ranking algorithm (BM25, embeddings, etc.)
