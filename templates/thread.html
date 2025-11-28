@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Thread – Bits & Insights Forum</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            background:#000;
+            color:#fff;
+            margin:0;
+            font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        }
+        nav {
+            padding:18px 40px;
+            border-bottom:1px solid #333;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+        nav a {
+            color:#fff;
+            text-decoration:none;
+            margin-left:20px;
+            font-size:14px;
+            opacity:0.85;
+        }
+        nav a:hover { opacity:1; }
+
+        .container {
+            max-width:900px;
+            margin:60px auto 40px auto;
+            padding:0 20px;
+        }
+        .thread-title {
+            font-size:24px;
+            margin-bottom:8px;
+        }
+        .thread-meta {
+            font-size:13px;
+            color:#999;
+            margin-bottom:16px;
+        }
+        .thread-body {
+            font-size:15px;
+            color:#ddd;
+            white-space:pre-wrap;
+            line-height:1.6;
+            margin-bottom:24px;
+        }
+
+        .reply-box {
+            border:1px solid #222;
+            padding:16px;
+            border-radius:6px;
+            margin-bottom:24px;
+        }
+        .reply-box textarea {
+            width:100%;
+            background:#000;
+            color:#fff;
+            border:1px solid #555;
+            border-radius:4px;
+            padding:8px;
+            font-size:14px;
+            min-height:80px;
+        }
+        .reply-box textarea:focus {
+            outline:none;
+            border-color:#fff;
+        }
+        .reply-box button {
+            margin-top:8px;
+            padding:8px 14px;
+            border-radius:4px;
+            border:1px solid #fff;
+            background:#fff;
+            color:#000;
+            font-size:13px;
+            font-weight:600;
+            cursor:pointer;
+        }
+        .reply-box button:hover {
+            background:#ccc;
+        }
+        .reply-hint {
+            font-size:12px;
+            color:#888;
+            margin-top:4px;
+        }
+
+        .comment {
+            border-top:1px solid #222;
+            padding:10px 0;
+        }
+        .comment-header {
+            font-size:12px;
+            color:#999;
+            margin-bottom:4px;
+        }
+        .comment-text {
+            font-size:14px;
+            color:#ddd;
+            white-space:pre-wrap;
+        }
+
+        footer {
+            padding:40px;
+            text-align:center;
+            font-size:13px;
+            color:#666;
+            border-top:1px solid #222;
+            margin-top:40px;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div><strong>Bits & Insights</strong></div>
+    <div>
+        <a href="/">Home</a>
+        <a href="/browse">Browse</a>
+        <a href="/forum">Forum</a>
+        <a href="/favorites">Favorites</a>
+        <a href="/login">Login</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="thread-title" id="thread-title">Loading...</div>
+    <div class="thread-meta" id="thread-meta"></div>
+    <div class="thread-body" id="thread-body"></div>
+
+    <!-- Reply box -->
+    <section class="reply-box">
+        <textarea id="reply-input" placeholder="Write a reply..."></textarea>
+        <button id="reply-submit">Post reply</button>
+        <div class="reply-hint" id="reply-hint">
+            You need to be logged in to reply.
+        </div>
+    </section>
+
+    <!-- Comments list -->
+    <section id="comments-list">
+        <p style="color:#888;">Loading comments...</p>
+    </section>
+</div>
+
+<footer>
+    © 2025 Bits & Insights · Forum powered by Firestore
+</footer>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAi7T7g8zFNYewd-6MSwMbl0qY4H1t7TSI",
+    authDomain: "bits-insights.firebaseapp.com",
+    projectId: "bits-insights",
+    storageBucket: "bits-insights.firebasestorage.app",
+    messagingSenderId: "977263721818",
+    appId: "1:977263721818:web:4b2c5901fbcd9ccc97c763",
+    measurementId: "G-J5QDM8RWM0"
+  };
+
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+
+  // From Flask passed thread_id
+  const threadId = "{{ thread_id }}";
+
+  const titleEl   = document.getElementById("thread-title");
+  const metaEl    = document.getElementById("thread-meta");
+  const bodyEl    = document.getElementById("thread-body");
+  const replyInput  = document.getElementById("reply-input");
+  const replySubmit = document.getElementById("reply-submit");
+  const replyHint   = document.getElementById("reply-hint");
+  const commentsList = document.getElementById("comments-list");
+
+  let currentUser = null;
+  let threadDocRef = db.collection("threads").doc(threadId);
+
+  // Auth state
+  auth.onAuthStateChanged(user => {
+      currentUser = user || null;
+      if (user) {
+          replyHint.textContent = "Replying as: " + (user.email || "anonymous");
+          replySubmit.disabled = false;
+      } else {
+          replyHint.textContent = "You need to be logged in to reply.";
+          replySubmit.disabled = true;
+      }
+  });
+
+  // Load thread content
+  threadDocRef.onSnapshot(doc => {
+      if (!doc.exists) {
+          titleEl.textContent = "Thread not found";
+          metaEl.textContent = "";
+          bodyEl.textContent = "";
+          return;
+      }
+      const t = doc.data();
+      titleEl.textContent = t.title || "(no title)";
+      bodyEl.textContent  = t.body || "";
+      let timeStr = "";
+      if (t.createdAt && t.createdAt.toDate) {
+          timeStr = t.createdAt.toDate().toLocaleString();
+      }
+      metaEl.textContent = `${t.userEmail || "Unknown user"}${timeStr ? " · " + timeStr : ""}`;
+  }, err => {
+      console.error("Error loading thread:", err);
+      titleEl.textContent = "Error loading thread.";
+  });
+
+  // Load comments list
+  threadDocRef
+    .collection("comments")
+    .orderBy("createdAt", "asc")
+    .limit(200)
+    .onSnapshot(snapshot => {
+        commentsList.innerHTML = "";
+        if (snapshot.empty) {
+            commentsList.innerHTML = "<p style='color:#888;'>No replies yet.</p>";
+            return;
+        }
+        snapshot.forEach(doc => {
+            const c = doc.data();
+            const email = c.userEmail || "Unknown user";
+            const text  = c.text || "";
+            let timeStr = "";
+            if (c.createdAt && c.createdAt.toDate) {
+                timeStr = c.createdAt.toDate().toLocaleString();
+            }
+
+            const div = document.createElement("div");
+            div.className = "comment";
+            div.innerHTML = `
+                <div class="comment-header">
+                    ${email}${timeStr ? " · " + timeStr : ""}
+                </div>
+                <div class="comment-text">
+                    ${text}
+                </div>
+            `;
+            commentsList.appendChild(div);
+        });
+    }, err => {
+        console.error("Error loading comments:", err);
+        commentsList.innerHTML = "<p style='color:#f66;'>Failed to load comments.</p>";
+    });
+
+  // Send reply
+  replySubmit.addEventListener("click", async () => {
+      if (!currentUser) return;
+      const text = replyInput.value.trim();
+      if (!text) return;
+
+      replySubmit.disabled = true;
+
+      try {
+          const now = firebase.firestore.FieldValue.serverTimestamp();
+
+          const commentRef = threadDocRef.collection("comments").doc();
+          await commentRef.set({
+              text: text,
+              userUid: currentUser.uid,
+              userEmail: currentUser.email || "",
+              createdAt: now
+          });
+
+          // Update main thread's lastCommentAt
+          await threadDocRef.update({
+              lastCommentAt: now
+          });
+
+          replyInput.value = "";
+      } catch (err) {
+          console.error("Error posting reply:", err);
+          alert("Failed to post reply.");
+      } finally {
+          replySubmit.disabled = false;
+      }
+  });
+</script>
+
+</body>
+</html>

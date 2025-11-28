@@ -287,6 +287,14 @@ def browse():
         day_options=day_options,
     )
 
+@app.route("/forum")
+def forum():
+    return render_template("forum.html")
+
+@app.route("/forum/<thread_id>")
+def forum_thread(thread_id):
+    return render_template("thread.html", thread_id=thread_id)
+
 
 
 

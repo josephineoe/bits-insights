@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Forum – Bits & Insights</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            background:#000;
+            color:#fff;
+            margin:0;
+            font-family:"Inter",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        }
+        nav {
+            padding:18px 40px;
+            border-bottom:1px solid #333;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+        nav a {
+            color:#fff;
+            text-decoration:none;
+            margin-left:20px;
+            font-size:14px;
+            opacity:0.85;
+        }
+        nav a:hover { opacity:1; }
+
+        .container {
+            max-width:900px;
+            margin:60px auto 40px auto;
+            padding:0 20px;
+        }
+        .page-title {
+            font-size:28px;
+            margin-bottom:8px;
+        }
+        .page-subtitle {
+            font-size:14px;
+            color:#aaa;
+            margin-bottom:24px;
+        }
+
+        .new-thread {
+            border:1px solid #222;
+            padding:16px;
+            border-radius:6px;
+            margin-bottom:24px;
+        }
+        .new-thread h2 {
+            font-size:16px;
+            margin:0 0 10px 0;
+        }
+        .new-thread input,
+        .new-thread textarea {
+            width:100%;
+            background:#000;
+            color:#fff;
+            border:1px solid #555;
+            border-radius:4px;
+            padding:8px;
+            font-size:14px;
+            margin-bottom:8px;
+        }
+        .new-thread input:focus,
+        .new-thread textarea:focus {
+            outline:none;
+            border-color:#fff;
+        }
+        .new-thread button {
+            padding:8px 14px;
+            border-radius:4px;
+            border:1px solid #fff;
+            background:#fff;
+            color:#000;
+            font-size:13px;
+            font-weight:600;
+            cursor:pointer;
+        }
+        .new-thread button:hover {
+            background:#ccc;
+        }
+        .hint {
+            font-size:12px;
+            color:#888;
+            margin-top:4px;
+        }
+
+        .thread-list {
+            margin-top:16px;
+        }
+        .thread-card {
+            border-top:1px solid #222;
+            padding:14px 0;
+        }
+        .thread-title {
+            font-size:16px;
+            margin-bottom:4px;
+        }
+        .thread-title a {
+            color:#fff;
+            text-decoration:none;
+        }
+        .thread-title a:hover {
+            text-decoration:underline;
+        }
+        .thread-meta {
+            font-size:12px;
+            color:#999;
+            margin-bottom:6px;
+        }
+        .thread-preview {
+            font-size:13px;
+            color:#ccc;
+            max-height:3.6em;
+            overflow:hidden;
+            white-space:pre-wrap;
+        }
+
+        footer {
+            padding:40px;
+            text-align:center;
+            font-size:13px;
+            color:#666;
+            border-top:1px solid #222;
+            margin-top:40px;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div><strong>Bits & Insights</strong></div>
+    <div>
+        <a href="/">Home</a>
+        <a href="/browse">Browse</a>
+        <a href="/forum">Forum</a>
+        <a href="/favorites">Favorites</a>
+        <a href="/login">Login</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-title">Forum</div>
+    <div class="page-subtitle">
+        Create threads and discuss anything related to research, arXiv, or learning.
+    </div>
+
+    <!-- New thread section -->
+    <section class="new-thread">
+        <h2>Create a new thread</h2>
+        <input id="thread-title" type="text" placeholder="Thread title">
+        <textarea id="thread-body" placeholder="What would you like to discuss?" rows="4"></textarea>
+        <button id="thread-submit">Post thread</button>
+        <div class="hint" id="new-thread-hint">
+            You need to be logged in to post a thread.
+        </div>
+    </section>
+
+    <!-- Threads list -->
+    <section class="thread-list" id="thread-list">
+        <p style="color:#888;">Loading threads...</p>
+    </section>
+</div>
+
+<footer>
+    © 2025 Bits & Insights · Forum powered by Firestore
+</footer>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyAi7T7g8zFNYewd-6MSwMbl0qY4H1t7TSI",
+    authDomain: "bits-insights.firebaseapp.com",
+    projectId: "bits-insights",
+    storageBucket: "bits-insights.firebasestorage.app",
+    messagingSenderId: "977263721818",
+    appId: "1:977263721818:web:4b2c5901fbcd9ccc97c763",
+    measurementId: "G-J5QDM8RWM0"
+  };
+
+  if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+  }
+  const auth = firebase.auth();
+  const db   = firebase.firestore();
+
+  const threadTitleInput = document.getElementById("thread-title");
+  const threadBodyInput  = document.getElementById("thread-body");
+  const threadSubmitBtn  = document.getElementById("thread-submit");
+  const newThreadHint    = document.getElementById("new-thread-hint");
+  const threadListEl     = document.getElementById("thread-list");
+
+  let currentUser = null;
+
+  // Auth state
+  auth.onAuthStateChanged(user => {
+      currentUser = user || null;
+      if (user) {
+          newThreadHint.textContent = "Posting as: " + (user.email || "anonymous");
+          threadSubmitBtn.disabled = false;
+      } else {
+          newThreadHint.textContent = "You need to be logged in to post a thread.";
+          threadSubmitBtn.disabled = true;
+      }
+  });
+
+  // Post new thread
+  threadSubmitBtn.addEventListener("click", async () => {
+      if (!currentUser) return;
+      const title = threadTitleInput.value.trim();
+      const body  = threadBodyInput.value.trim();
+      if (!title || !body) return;
+
+      threadSubmitBtn.disabled = true;
+
+      try {
+          const ref = db.collection("threads").doc(); // Auto ID
+          const now = firebase.firestore.FieldValue.serverTimestamp();
+
+          await ref.set({
+              title: title,
+              body: body,
+              userUid: currentUser.uid,
+              userEmail: currentUser.email || "",
+              createdAt: now,
+              lastCommentAt: now
+          });
+
+          threadTitleInput.value = "";
+          threadBodyInput.value  = "";
+      } catch (err) {
+          console.error("Error creating thread:", err);
+          alert("Failed to create thread.");
+      } finally {
+          threadSubmitBtn.disabled = false;
+      }
+  });
+
+  // Load threads list (ordered by lastCommentAt descending)
+  db.collection("threads")
+    .orderBy("lastCommentAt", "desc")
+    .limit(50)
+    .onSnapshot(snapshot => {
+        threadListEl.innerHTML = "";
+        if (snapshot.empty) {
+            threadListEl.innerHTML = "<p style='color:#888;'>No threads yet. Be the first to start one!</p>";
+            return;
+        }
+
+        snapshot.forEach(doc => {
+            const t = doc.data();
+            const id = doc.id;
+            const title = t.title || "(no title)";
+            const email = t.userEmail || "Unknown user";
+            const bodyPreview = (t.body || "").slice(0, 200);
+            let timeStr = "";
+            if (t.lastCommentAt && t.lastCommentAt.toDate) {
+                timeStr = t.lastCommentAt.toDate().toLocaleString();
+            }
+
+            const div = document.createElement("div");
+            div.className = "thread-card";
+            div.innerHTML = `
+                <div class="thread-title">
+                    <a href="/forum/${id}">
+                        ${title}
+                    </a>
+                </div>
+                <div class="thread-meta">
+                    Started by ${email}${timeStr ? " · Last activity: " + timeStr : ""}
+                </div>
+                <div class="thread-preview">
+                    ${bodyPreview}
+                </div>
+            `;
+            threadListEl.appendChild(div);
+        });
+    }, err => {
+        console.error("Error loading threads:", err);
+        threadListEl.innerHTML = "<p style='color:#f66;'>Failed to load threads.</p>";
+    });
+</script>
+
+</body>
+</html>
