@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Browse – Bits & Insights</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            margin: 0;
+            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+        nav {
+            padding: 18px 40px;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        nav a {
+            color: #fff;
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 14px;
+            opacity: 0.85;
+        }
+        nav a:hover {
+            opacity: 1;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 60px auto 40px auto;
+            padding: 0 20px;
+        }
+
+        .page-title {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+        .page-subtitle {
+            font-size: 14px;
+            color: #aaa;
+            margin-bottom: 24px;
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        .filters select {
+            background: #000;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .filters button {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid #fff;
+            background: #fff;
+            color: #000;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .filters button:hover {
+            background: #ccc;
+        }
+
+        .papers {
+            margin-top: 10px;
+        }
+        .paper-card {
+            border-top: 1px solid #222;
+            padding: 16px 0;
+        }
+        .paper-title {
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+        .paper-title a {
+            color: #fff;
+            text-decoration: none;
+        }
+        .paper-title a:hover {
+            text-decoration: underline;
+        }
+        .paper-meta {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 8px;
+        }
+        .paper-summary {
+            font-size: 13px;
+            color: #ccc;
+            line-height: 1.5;
+            max-height: 4.5em;
+            overflow: hidden;
+        }
+        .paper-links {
+            margin-top: 8px;
+            font-size: 12px;
+        }
+        .paper-links a {
+            color: #fff;
+            text-decoration: none;
+            margin-right: 12px;
+            opacity: 0.85;
+        }
+        .paper-links a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        footer {
+            padding: 40px;
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            border-top: 1px solid #222;
+            margin-top: 40px;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div><strong>Bits & Insights</strong></div>
+    <div>
+        <a href="/">Home</a>
+        <a href="/browse">Browse</a>
+        <a href="/favorites">Favorites</a>
+        <a href="/login">Login</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="page-title">Browse recent papers</div>
+    <div class="page-subtitle">
+        Explore the latest submissions on arXiv by category and time range.
+    </div>
+
+    <!-- Filter bar -->
+    <form class="filters" method="GET" action="/browse">
+        <div>
+            Category:
+            <select name="category">
+                {% for value, label in categories %}
+                    <option value="{{ value }}" {% if value == current_category %}selected{% endif %}>
+                        {{ value }} – {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div>
+            Time range:
+            <select name="days">
+                {% for d in day_options %}
+                    <option value="{{ d }}" {% if d == current_days %}selected{% endif %}>
+                        Last {{ d }} days
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit">Update</button>
+    </form>
+
+    <!-- Papers list -->
+    <div class="papers">
+        {% if papers %}
+            {% for p in papers %}
+                <div class="paper-card">
+                    <div class="paper-title">
+                        <a href="{{ url_for('paper_detail', arxiv_id=p.arxiv_id) }}">
+                            {{ p.title }}
+                        </a>
+                    </div>
+                    <div class="paper-meta">
+                        {% if p.authors %}{{ p.authors | join(", ") }}{% else %}Unknown authors{% endif %}
+                        {% if p.published %} · {{ p.published }}{% endif %}
+                        · arXiv:{{ p.arxiv_id }}
+                    </div>
+                    <div class="paper-summary">
+                        {{ p.summary }}
+                    </div>
+                    <div class="paper-links">
+                        {% if p.html_link %}
+                            <a href="{{ p.html_link }}" target="_blank">View on arXiv</a>
+                        {% endif %}
+                        {% if p.pdf_link %}
+                            <a href="{{ p.pdf_link }}" target="_blank">PDF</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>No papers found for this filter.</p>
+        {% endif %}
+    </div>
+</div>
+
+<footer>
+    © 2025 Bits & Insights · Browse powered by arXiv API
+</footer>
+
+</body>
+</html>

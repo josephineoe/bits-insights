@@ -221,6 +221,73 @@ def favorites_page():
 def login():
     return render_template("login.html")
 
+@app.route("/browse")
+def browse():
+    # 1. Read from frontend
+    category = request.args.get("category", "cs.AI").strip()  # Default cs.AI
+    days_str = request.args.get("days", "7").strip()          # Default 7 days
+
+    try:
+        days = int(days_str)
+    except ValueError:
+        days = 7
+
+    # 2. Construct query: by category + recent N days
+    #   Here we use search_recent_papers + arxiv's query syntax
+    query = f"cat:{category}"
+
+    results_iter = strategy.search_recent_papers(
+        keywords=query,
+        days=days,
+        max_results=30,
+    )
+
+    # 3. Convert arxiv.Result to dict for template
+    papers = []
+    for r in results_iter:
+        arxiv_id = r.entry_id.split("/")[-1]
+
+        if getattr(r, "published", None):
+            published_str = r.published.strftime("%Y-%m-%d")
+        else:
+            published_str = ""
+
+        try:
+            authors = [a.name for a in r.authors]
+        except Exception:
+            authors = []
+
+        papers.append({
+            "title": r.title,
+            "summary": r.summary,
+            "authors": authors,
+            "html_link": r.entry_id,
+            "pdf_link": getattr(r, "pdf_url", None),
+            "published": published_str,
+            "arxiv_id": arxiv_id,
+        })
+
+    # 4. Some common categories for dropdown
+    categories = [
+        ("cs.AI", "AI"),
+        ("cs.LG", "Machine Learning"),
+        ("cs.CL", "Computation & Language"),
+        ("cs.CV", "Computer Vision"),
+        ("math.PR", "Probability"),
+    ]
+
+    day_options = [7, 30, 90]
+
+    return render_template(
+        "browse.html",
+        papers=papers,
+        current_category=category,
+        current_days=days,
+        categories=categories,
+        day_options=day_options,
+    )
+
+
 
 
 if __name__ == "__main__":

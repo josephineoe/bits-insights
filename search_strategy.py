@@ -1,7 +1,7 @@
 # search_strategy.py
 import arxiv
 from typing import List, Iterator, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 class ArxivSearchStrategy:
     def __init__(self):
@@ -77,7 +77,35 @@ class ArxivSearchStrategy:
             if result.published >= cutoff_date:
                 yield result
             else:
-                break  
+                break
+
+    def search_recent_papers(
+        self,
+        keywords: str,
+        days: int = 7,
+        max_results: int = 50,
+    ) -> Iterator[arxiv.Result]:
+        """
+        Search for papers submitted in the last N days.
+        Uses UTC time to avoid naive/aware datetime issues.
+        """
+        search = arxiv.Search(
+            query=keywords,
+            max_results=max_results,
+            sort_by=arxiv.SortCriterion.SubmittedDate,
+        )
+
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=days)
+
+        for result in self.client.results(search):
+            pub = getattr(result, "published", None)
+            if pub is None:
+                continue
+
+            if pub >= cutoff_date:
+                yield result
+            else:
+                break
     
     def search_author_in_category(self, author: str, category: str, max_results: int = 10) -> Iterator[arxiv.Result]:
         """Find papers by a specific author in a specific category."""
