@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 import requests
 import feedparser
+import os
 
 from search_strategy import ArxivSearchStrategy
 
@@ -299,4 +300,5 @@ def forum_thread(thread_id):
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
