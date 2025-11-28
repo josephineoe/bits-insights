@@ -130,25 +130,6 @@ Using **Firebase Authentication**:
 
 ---
 
-## 📁 Project Structure
-
-bits-insights/
-│
-├── app.py
-├── search_strategy.py
-├── requirements.txt
-├── Dockerfile
-│
-├── templates/
-│ ├── index.html
-│ ├── search_results.html
-│ ├── paper_detail.html
-│ ├── favorites.html
-│ └── login.html
-│
-└── static/
-└── (optional assets)
-
 ## 🛠 Installation & Run (Docker)
 
 ### 1. Clone repository
